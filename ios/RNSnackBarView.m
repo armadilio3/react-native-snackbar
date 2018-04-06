@@ -29,6 +29,7 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
 
 @property (nonatomic) RNSnackBarViewState state;
 @property (nonatomic, strong) NSString* title;
+@property (nonatomic, strong) UIColor* titleColor;
 @property (nonatomic, strong) NSString* actionTitle;
 @property (nonatomic, strong) UIColor* actionTitleColor;
 @property (nonatomic, strong) void (^pendingCallback)();
@@ -69,7 +70,8 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
 
 - (instancetype)init
 {
-    self = [super initWithFrame:CGRectMake(0, [UIScreen mainScreen].bounds.size.height - 48, [UIScreen mainScreen].bounds.size.width, 48)];
+    self = [super initWithFrame:CGRectMake(0, 0/*[UIScreen mainScreen].bounds.size.height - 48*/, [UIScreen mainScreen].bounds.size.width, 70)];
+    self.backgroundColor = [UIColor colorWithRed:0.196078F green:0.196078F blue:0.196078F alpha:1.0F];
     if (self) {
         [self buildView];
     }
@@ -77,19 +79,21 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
 }
 
 - (void)buildView {
-    CGFloat topPadding = 14;
-    CGFloat bottomPadding = topPadding;
+    CGFloat topPadding = 54;
+    CGFloat bottomPadding = topPadding - 34;
 
+    /*
     if (@available(iOS 11.0, *)) {
         UIWindow *window = UIApplication.sharedApplication.keyWindow;
 
         if (window.safeAreaInsets.bottom > bottomPadding)
             bottomPadding = window.safeAreaInsets.bottom;
-    }
+    }*/
 
     self.backgroundColor = [UIColor colorWithRed:0.196078F green:0.196078F blue:0.196078F alpha:1.0F];
+    
     self.accessibilityIdentifier = @"snackbar";
-  
+    
     titleLabel = [UILabel new];
     titleLabel.text = _title;
     titleLabel.numberOfLines = 2;
@@ -97,7 +101,7 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
     titleLabel.font = [UIFont boldSystemFontOfSize:14];
     [titleLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self addSubview:titleLabel];
-
+    
     actionButton = [UIButton new];
     actionButton.titleLabel.font = [UIFont boldSystemFontOfSize:16];
     [actionButton setTitle:@"" forState:UIControlStateNormal];
@@ -105,6 +109,7 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
     [actionButton setTranslatesAutoresizingMaskIntoConstraints:NO];
     [self addSubview:actionButton];
 
+    
     [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:
           @"H:|-24-[titleLabel]-24-[actionButton]-24-|"
           options:0 metrics:nil views:@{@"titleLabel": titleLabel, @"actionButton": actionButton}]];
@@ -114,7 +119,7 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
     [titleLabel setContentHuggingPriority:250 forAxis:UILayoutConstraintAxisHorizontal];
     [actionButton setContentCompressionResistancePriority:750 forAxis:UILayoutConstraintAxisHorizontal];
     [actionButton setContentHuggingPriority:750 forAxis:UILayoutConstraintAxisHorizontal];
-
+    
 }
 
 -(void)setTitle:(NSString *)title {
@@ -138,15 +143,24 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
     _pendingOptions = nil;
     _pendingCallback = nil;
     UIWindow* keyWindow = [UIApplication sharedApplication].keyWindow;
+    
     [keyWindow addSubview:self];
+    
     [self setTranslatesAutoresizingMaskIntoConstraints:false];
+    /*
     [keyWindow addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[self(>=48)]|" options:0 metrics:nil views:@{@"self": self}]];
+     */
     [keyWindow addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[self]|" options:0 metrics:nil views:@{@"self": self}]];
 
-    self.transform = CGAffineTransformMakeTranslation(0, self.bounds.size.height);
+    
+    self.transform = CGAffineTransformMakeTranslation(0, -self.bounds.size.height);
+     
     titleLabel.alpha = 0;
+    titleLabel.textColor = self.titleColor;
     actionButton.alpha = 0;
+     
     self.state = RNSnackBarViewStatePresenting;
+     
     [UIView animateWithDuration:ANIMATION_DURATION animations:^{
         self.transform = CGAffineTransformIdentity;
         titleLabel.alpha = 1;
@@ -166,6 +180,7 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
                                                       userInfo:nil
                                                        repeats:FALSE];
      }];
+     
 }
 
 - (void)dismiss {
@@ -173,7 +188,7 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
     [dismissTimer invalidate];
     self.state = RNSnackBarViewStateDismissing;
     [UIView animateWithDuration:ANIMATION_DURATION animations:^{
-        self.transform = CGAffineTransformMakeTranslation(0, self.bounds.size.height);
+        self.transform = CGAffineTransformMakeTranslation(0, -self.bounds.size.height);
     } completion:^(BOOL finished) {
         self.state = RNSnackBarViewStateDismissed;
         [self removeFromSuperview];
@@ -194,8 +209,12 @@ static const NSTimeInterval ANIMATION_DURATION = 0.250;
     if (!_pendingOptions) { return; }
 
     id backgroundColor = _pendingOptions[@"backgroundColor"];
+    id titleColor = _pendingOptions[@"titleColor"];
 
     self.backgroundColor = backgroundColor ? [RCTConvert UIColor:backgroundColor] : [UIColor colorWithRed:0.196078F green:0.196078F blue:0.196078F alpha:1.0F];
+    
+    self.titleColor = titleColor ? [RCTConvert UIColor:titleColor] : [UIColor colorWithRed:0.0F green:1.0F blue:0.0F alpha:1.0F];
+
     self.title = _pendingOptions[@"title"];
     self.callback = _pendingCallback;
     NSDictionary* action = _pendingOptions[@"action"];
