@@ -10,6 +10,7 @@ type Action = {
 
 type SnackBarOptions = {
   title: string,
+  titleColor?: string,
   duration?: number,
   backgroundColor?: string,
   action?: Action,
@@ -39,6 +40,10 @@ const SnackBar: ISnackBar = {
       /* eslint-enable */
     }
 
+    if(options.titleColor){
+      options.titleColor = processColor(options.titleColor);
+    }
+  
     if (options.backgroundColor) {
       // eslint-disable-next-line no-param-reassign
       options.backgroundColor = processColor(options.backgroundColor);
